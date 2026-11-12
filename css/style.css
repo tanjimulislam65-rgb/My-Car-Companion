@@ -1,0 +1,526 @@
+
+:root {
+  --bg: #101715;
+  --surface: #19221f;
+  --surface-2: #222e29;
+  --primary: #20c997;
+  --primary-dark: #159b75;
+  --text: #f3f7f5;
+  --muted: #9aa9a2;
+  --border: rgba(255, 255, 255, 0.08);
+  --danger: #ff6b6b;
+  --warning: #ffc857;
+  --radius: 18px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 90px;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  min-height: 100vh;
+  padding: 20px 16px;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 19px;
+}
+
+/* Vehicle card */
+
+.vehicle-card {
+  background: linear-gradient(135deg, #174f40, #102e27);
+  border: 1px solid rgba(32, 201, 151, 0.2);
+  border-radius: 24px;
+  padding: 22px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+
+.vehicle-card .label {
+  color: #b6e8d8;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.vehicle-card h2 {
+  font-size: 22px;
+  margin: 8px 0 5px;
+}
+
+.vehicle-card .vehicle-year {
+  color: #b6e8d8;
+  font-size: 13px;
+}
+
+.vehicle-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.vehicle-stat {
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  padding: 13px;
+}
+
+.vehicle-stat small {
+  display: block;
+  color: #b6e8d8;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.vehicle-stat strong {
+  font-size: 17px;
+}
+
+/* Section headings */
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 25px 0 14px;
+}
+
+.section-heading h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.section-heading a,
+.text-button {
+  color: var(--primary);
+  font-size: 13px;
+  text-decoration: none;
+  background: none;
+}
+
+/* Quick actions */
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.action-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  padding: 15px 5px;
+  text-align: center;
+  color: var(--text);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.action-card:active {
+  transform: scale(0.96);
+  background: var(--surface-2);
+}
+
+.action-icon {
+  font-size: 23px;
+  margin-bottom: 9px;
+}
+
+.action-card span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Dashboard cards */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 17px;
+  margin-bottom: 13px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 650;
+  margin-bottom: 12px;
+}
+
+.card-subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Summary grid */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  padding: 16px;
+}
+
+.summary-card .summary-icon {
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+
+.summary-card small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.summary-card h3 {
+  font-size: 21px;
+  margin-top: 6px;
+}
+
+/* Progress */
+
+.progress-track {
+  width: 100%;
+  height: 7px;
+  background: var(--surface-2);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 20px;
+}
+
+/* Lists */
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--surface-2);
+  font-size: 19px;
+  flex-shrink: 0;
+}
+
+.list-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-content strong {
+  display: block;
+  font-size: 13px;
+}
+
+.list-content small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.list-value {
+  font-size: 13px;
+  font-weight: 650;
+  text-align: right;
+}
+
+/* Status badges */
+
+.badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.badge.success {
+  background: rgba(32, 201, 151, 0.14);
+  color: var(--primary);
+}
+
+.badge.warning {
+  background: rgba(255, 200, 87, 0.14);
+  color: var(--warning);
+}
+
+.badge.danger {
+  background: rgba(255, 107, 107, 0.14);
+  color: var(--danger);
+}
+
+/* Forms */
+
+.form-group {
+  margin-bottom: 17px;
+}
+
+.form-group label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.form-control {
+  width: 100%;
+  min-height: 47px;
+  padding: 12px 14px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+}
+
+.form-control::placeholder {
+  color: #718078;
+}
+
+textarea.form-control {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* Buttons */
+
+.btn {
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 18px;
+  border-radius: 13px;
+  background: var(--primary);
+  color: #06271e;
+  font-weight: 750;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.btn:active {
+  opacity: 0.8;
+}
+
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-danger {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--danger);
+}
+
+/* Tables */
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th, td {
+  padding: 12px 9px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Bottom navigation */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: rgba(25, 34, 31, 0.97);
+  backdrop-filter: blur(15px);
+  border-top: 1px solid var(--border);
+  padding: 10px 5px calc(10px + env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  padding: 5px 0;
+}
+
+.nav-item .nav-icon {
+  font-size: 20px;
+}
+
+.nav-item.active {
+  color: var(--primary);
+}
+
+/* Pages */
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 35px 15px;
+  color: var(--muted);
+}
+
+.empty-state .empty-icon {
+  font-size: 35px;
+  margin-bottom: 12px;
+}
+
+/* Light theme */
+
+body.light-theme {
+  --bg: #f2f6f4;
+  --surface: #ffffff;
+  --surface-2: #edf2ef;
+  --text: #17231e;
+  --muted: #697a70;
+  --border: rgba(0, 0, 0, 0.08);
+  --shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .bottom-nav {
+  background: rgba(255, 255, 255, 0.97);
+}
+
+/* Responsive */
+
+@media (max-width: 380px) {
+  .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .vehicle-card h2 {
+    font-size: 19px;
+  }
+}
