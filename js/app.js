@@ -1,8 +1,5 @@
 
-/*
- * My Car Companion
- * Main application controller
- */
+/* My Car Companion - Main Application */
 
 const DEFAULT_VEHICLE = {
   id: "my-vehicle",
@@ -11,126 +8,87 @@ const DEFAULT_VEHICLE = {
   year: 2021,
   odometer: 15600,
   registration: "",
-  engine: "Hybrid",
-  fuelType: "Petrol",
-  lastUpdated: new Date().toISOString()
+  vin: "",
+  notes: ""
 };
 
-let currentPage = "home";
+const $ = id => document.getElementById(id);
 
-/* Helpers */
+const money = value =>
+  "৳" + Number(value || 0).toLocaleString("en-BD");
 
-const $ = (selector) => document.querySelector(selector);
+const number = value =>
+  Number(value || 0).toLocaleString("en-BD");
 
-const formatMoney = (amount) =>
-  "৳" + Number(amount || 0).toLocaleString("en-BD");
-
-const formatNumber = (number) =>
-  Number(number || 0).toLocaleString("en-BD");
-
-const formatDate = (date) => {
-  if (!date) return "Not specified";
-
-  return new Date(date).toLocaleDateString("en-GB", {
+const dateText = value => {
+  if (!value) return "Date not set";
+  return new Date(value + "T00:00:00").toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric"
   });
 };
 
-const escapeHTML = (value) =>
-  String(value ?? "").replace(/[&<>"']/g, (character) => ({
+const safe = value =>
+  String(value ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
     '"': "&quot;",
-    "'": "&#039;"
-  })[character]);
+    "'": "&#39;"
+  })[c]);
 
-function showMessage(message) {
-  let toast = $("#toast");
-
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.id = "toast";
-    toast.style.cssText = `
-      position:fixed;
-      bottom:100px;
-      left:50%;
-      transform:translateX(-50%);
-      background:#20c997;
-      color:#06271e;
-      padding:12px 20px;
-      border-radius:12px;
-      font-size:13px;
-      font-weight:700;
-      z-index:9999;
-      max-width:90%;
-      text-align:center;
-    `;
-    document.body.appendChild(toast);
-  }
+function notify(message) {
+  const toast = $("toast");
+  if (!toast) return;
 
   toast.textContent = message;
-  toast.style.display = "block";
+  toast.classList.add("show");
 
   clearTimeout(window.toastTimer);
-
   window.toastTimer = setTimeout(() => {
-    toast.style.display = "none";
+    toast.classList.remove("show");
   }, 2500);
 }
 
-/* Navigation */
+function formData(form) {
+  return Object.fromEntries(new FormData(form).entries());
+}
 
-function navigateTo(page) {
-  currentPage = page;
+function today() {
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset * 60000)
+    .toISOString().slice(0, 10);
+}
 
-  document.querySelectorAll(".page").forEach((element) => {
-    element.classList.toggle(
+/* NAVIGATION */
+
+function navigate(page) {
+  document.querySelectorAll(".page").forEach(section => {
+    section.classList.toggle("active", section.id === page);
+  });
+
+  document.querySelectorAll(".nav-item").forEach(button => {
+    button.classList.toggle(
       "active",
-      element.id === `page-${page}`
+      button.dataset.page === page
     );
   });
 
-  document.querySelectorAll(".nav-item").forEach((element) => {
-    element.classList.toggle(
-      "active",
-      element.dataset.page === page
-    );
-  });
-
-  const titles = {
-    home: "My Car Companion",
-    service: "Maintenance",
-    fuel: "Fuel Log",
-    expenses: "Expenses",
-    more: "More"
-  };
-
-  const heading = $("#page-title");
-
-  if (heading) {
-    heading.textContent = titles[page] || "My Car Companion";
-  }
-
-  renderCurrentPage();
+  renderPage(page);
 }
 
-async function renderCurrentPage() {
-  try {
-    if (currentPage === "home") await renderDashboard();
-    if (currentPage === "service") await renderMaintenance();
-    if (currentPage === "fuel") await renderFuel();
-    if (currentPage === "expenses") await renderExpenses();
-    if (currentPage === "more") await renderReminders();
-  } catch (error) {
-    console.error(error);
-    showMessage("Unable to load data");
-  }
+async function renderPage(page) {
+  if (page === "dashboard") await renderDashboard();
+  if (page === "maintenance") await renderMaintenance();
+  if (page === "fuel") await renderFuel();
+  if (page === "expenses") await renderExpenses();
+  if (page === "reminders") await renderReminders();
+  if (page === "settings") await renderVehicle();
 }
 
-/* Dashboard */
+/* DASHBOARD */
 
 async function renderDashboard() {
   const vehicle = await getVehicle() || DEFAULT_VEHICLE;
@@ -139,430 +97,377 @@ async function renderDashboard() {
   const expenses = await getExpenseRecords();
   const reminders = await getReminders();
 
-  const mileage = $("#dashboard-mileage");
-  if (mileage) {
-    mileage.textContent =
-      formatNumber(vehicle.odometer) + " km";
-  }
+  $("vehicleTitle").textContent =
+    `${vehicle.make} ${vehicle.model}`;
 
-  const serviceCount = $("#dashboard-services");
-  if (serviceCount) {
-    serviceCount.textContent = services.length;
-  }
+  $("vehicleSubtitle").textContent =
+    `${vehicle.year} · ${vehicle.engine || "Hybrid"}`;
 
-  const fuelCount = $("#dashboard-fuel");
-  if (fuelCount) {
-    fuelCount.textContent = fuels.length;
-  }
+  $("dashOdometer").textContent =
+    `${number(vehicle.odometer)} km`;
 
-  const totalExpenses = expenses.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
+  const maintenanceTotal = services.reduce(
+    (sum, item) => sum + Number(item.amount || 0), 0
   );
 
-  const expenseElement = $("#dashboard-expenses");
-  if (expenseElement) {
-    expenseElement.textContent = formatMoney(totalExpenses);
-  }
-
-  const reminderElement = $("#dashboard-reminders");
-  if (reminderElement) {
-    reminderElement.textContent = reminders.length;
-  }
-
-  const vehicleName = $("#vehicle-name");
-  if (vehicleName) {
-    vehicleName.textContent =
-      `${vehicle.make || "Toyota"} ${vehicle.model || ""}`;
-  }
-
-  const vehicleYear = $("#vehicle-year");
-  if (vehicleYear) {
-    vehicleYear.textContent = vehicle.year || "";
-  }
-
-  const recent = $("#recent-activity");
-
-  if (recent) {
-    const activities = [
-      ...services.map(item => ({
-        title: item.type || "Maintenance",
-        detail: formatDate(item.date),
-        amount: item.amount,
-        icon: "🔧",
-        date: item.date
-      })),
-      ...fuels.map(item => ({
-        title: "Fuel refill",
-        detail: formatDate(item.date),
-        amount: item.amount,
-        icon: "⛽",
-        date: item.date
-      })),
-      ...expenses.map(item => ({
-        title: item.category || "Expense",
-        detail: formatDate(item.date),
-        amount: item.amount,
-        icon: "💳",
-        date: item.date
-      }))
-    ].sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5);
-
-    recent.innerHTML = activities.length
-      ? activities.map(item => `
-        <div class="list-item">
-          <div class="list-icon">${item.icon}</div>
-          <div class="list-content">
-            <strong>${escapeHTML(item.title)}</strong>
-            <small>${escapeHTML(item.detail)}</small>
-          </div>
-          <div class="list-value">
-            ${formatMoney(item.amount)}
-          </div>
-        </div>
-      `).join("")
-      : `<div class="empty-state">
-          <div class="empty-icon">🚗</div>
-          No activity recorded yet
-        </div>`;
-  }
-}
-
-/* Maintenance */
-
-async function renderMaintenance() {
-  const records = await getMaintenanceRecords();
-  const container = $("#maintenance-list");
-
-  if (!container) return;
-
-  const sorted = records.sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
+  const fuelTotal = fuels.reduce(
+    (sum, item) => sum + Number(item.amount || 0), 0
   );
 
-  container.innerHTML = sorted.length
-    ? sorted.map(item => `
-      <div class="card">
-        <div class="list-item">
-          <div class="list-icon">🔧</div>
-          <div class="list-content">
-            <strong>${escapeHTML(item.type)}</strong>
-            <small>${formatDate(item.date)}</small>
-            <small>${formatNumber(item.odometer)} km</small>
-            ${item.notes ? `<small>${escapeHTML(item.notes)}</small>` : ""}
-          </div>
-          <div class="list-value">
-            ${formatMoney(item.amount)}
-            <br>
-            <button class="text-button"
-              onclick="removeMaintenance('${item.id}')">
-              Delete
-            </button>
-          </div>
+  const otherTotal = expenses
+    .filter(item => !["Fuel", "Maintenance"].includes(item.category))
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+
+  $("dashMaintenance").textContent = money(maintenanceTotal);
+  $("dashFuel").textContent = money(fuelTotal);
+  $("dashOther").textContent = money(otherTotal);
+
+  const upcoming = reminders.filter(item => !item.completed);
+  $("dashReminders").textContent = upcoming.length;
+
+  const economy = calculateEconomy(fuels);
+  $("dashEconomy").textContent =
+    economy ? `${economy.toFixed(2)} km/L` : "— km/L";
+
+  const activity = [
+    ...services.map(item => ({
+      title: item.title,
+      date: item.date,
+      amount: item.amount,
+      icon: "🔧"
+    })),
+    ...fuels.map(item => ({
+      title: "Fuel refill",
+      date: item.date,
+      amount: item.amount,
+      icon: "⛽"
+    })),
+    ...expenses.map(item => ({
+      title: item.title,
+      date: item.date,
+      amount: item.amount,
+      icon: "🧾"
+    }))
+  ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+
+  $("recentList").classList.toggle("empty-state", !activity.length);
+
+  $("recentList").innerHTML = activity.length
+    ? activity.map(item => `
+      <div class="record-item">
+        <span>${item.icon}</span>
+        <div>
+          <strong>${safe(item.title)}</strong>
+          <small>${dateText(item.date)}</small>
         </div>
+        <strong>${money(item.amount)}</strong>
       </div>
     `).join("")
-    : `<div class="empty-state">
-        <div class="empty-icon">🔧</div>
-        No maintenance records yet
-      </div>`;
+    : "Your records will appear here.";
+}
+
+/* MAINTENANCE */
+
+async function renderMaintenance() {
+  const records = (await getMaintenanceRecords())
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  $("maintenanceCount").textContent =
+    `${records.length} records`;
+
+  $("maintenanceList").classList.toggle(
+    "empty-state", !records.length
+  );
+
+  $("maintenanceList").innerHTML = records.length
+    ? records.map(item => `
+      <article class="record-card">
+        <div class="record-heading">
+          <strong>${safe(item.title)}</strong>
+          <strong>${money(item.amount)}</strong>
+        </div>
+        <p>${safe(item.category)} · ${dateText(item.date)}</p>
+        <p>${number(item.odometer)} km</p>
+        ${item.notes ? `<p>${safe(item.notes)}</p>` : ""}
+        <button class="delete-btn"
+          data-delete="maintenance"
+          data-id="${safe(item.id)}">Delete</button>
+      </article>
+    `).join("")
+    : "No maintenance records yet.";
 }
 
 async function addMaintenance(event) {
   event.preventDefault();
 
+  const data = formData(event.target);
+
   const record = {
-    type: $("#maintenance-type")?.value,
-    date: $("#maintenance-date")?.value,
-    odometer: Number($("#maintenance-odometer")?.value || 0),
-    amount: Number($("#maintenance-amount")?.value || 0),
-    notes: $("#maintenance-notes")?.value || ""
+    title: data.title,
+    type: data.category,
+    category: data.category,
+    date: data.date,
+    odometer: Number(data.odometer),
+    partsCost: Number(data.partsCost || 0),
+    labourCost: Number(data.labourCost || 0),
+    amount: Number(data.partsCost || 0) +
+      Number(data.labourCost || 0),
+    notes: data.notes || ""
   };
 
-  if (!record.type || !record.date) {
-    showMessage("Please enter service type and date");
-    return;
-  }
-
   await saveMaintenance(record);
-
   event.target.reset();
-  showMessage("Maintenance record saved");
+
+  notify("Maintenance record saved");
   await renderMaintenance();
+  await renderDashboard();
 }
 
-async function removeMaintenance(id) {
-  if (!confirm("Delete this maintenance record?")) return;
+/* FUEL */
 
-  await deleteMaintenance(id);
-  showMessage("Record deleted");
-  await renderMaintenance();
-}
+function calculateEconomy(records) {
+  const fullTanks = [...records]
+    .filter(item => item.fullTank)
+    .sort((a, b) => Number(a.odometer) - Number(b.odometer));
 
-/* Fuel */
+  if (fullTanks.length < 2) return null;
 
-async function renderFuel() {
-  const records = await getFuelRecords();
-  const container = $("#fuel-list");
-
-  if (!container) return;
-
-  const sorted = records.sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
-  );
-
-  container.innerHTML = sorted.length
-    ? sorted.map(item => `
-      <div class="card">
-        <div class="list-item">
-          <div class="list-icon">⛽</div>
-          <div class="list-content">
-            <strong>${formatNumber(item.liters)} litres</strong>
-            <small>${formatDate(item.date)}</small>
-            <small>${formatNumber(item.odometer)} km</small>
-            <small>${escapeHTML(item.fuelType || "Petrol")}</small>
-          </div>
-          <div class="list-value">
-            ${formatMoney(item.amount)}
-            <br>
-            <button class="text-button"
-              onclick="removeFuel('${item.id}')">
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-    `).join("")
-    : `<div class="empty-state">
-        <div class="empty-icon">⛽</div>
-        No fuel records yet
-      </div>`;
-
-  renderFuelEconomy(records);
-}
-
-function renderFuelEconomy(records) {
-  const element = $("#fuel-economy");
-  if (!element) return;
-
-  const sorted = [...records].sort(
-    (a, b) => Number(a.odometer) - Number(b.odometer)
-  );
-
-  const fullTanks = sorted.filter(item => item.fullTank);
-
-  if (fullTanks.length < 2) {
-    element.textContent =
-      "Record at least two consecutive full-tank refills to calculate fuel economy.";
-    return;
-  }
-
-  const first = fullTanks[0];
-  const last = fullTanks[fullTanks.length - 1];
+  const previous = fullTanks[fullTanks.length - 2];
+  const latest = fullTanks[fullTanks.length - 1];
 
   const distance =
-    Number(last.odometer) - Number(first.odometer);
+    Number(latest.odometer) - Number(previous.odometer);
 
-  const liters = fullTanks
-    .slice(1)
-    .reduce((sum, item) => sum + Number(item.liters || 0), 0);
+  const litres = records
+    .filter(item =>
+      Number(item.odometer) > Number(previous.odometer) &&
+      Number(item.odometer) <= Number(latest.odometer)
+    )
+    .reduce((sum, item) => sum + Number(item.litres || 0), 0);
 
-  if (distance <= 0 || liters <= 0) {
-    element.textContent = "More fuel records are needed.";
-    return;
-  }
+  return distance > 0 && litres > 0
+    ? distance / litres
+    : null;
+}
 
-  const economy = distance / liters;
+async function renderFuel() {
+  const records = (await getFuelRecords())
+    .sort((a, b) => b.date.localeCompare(a.date));
 
-  element.textContent =
-    `${economy.toFixed(2)} km/L (estimated)`;
+  const total = records.reduce(
+    (sum, item) => sum + Number(item.amount || 0), 0
+  );
+
+  const economy = calculateEconomy(records);
+
+  $("fuelTotal").textContent = money(total);
+  $("fuelEconomy").textContent =
+    economy ? `${economy.toFixed(2)} km/L` : "— km/L";
+
+  $("fuelCount").textContent = `${records.length} records`;
+
+  $("fuelList").classList.toggle("empty-state", !records.length);
+
+  $("fuelList").innerHTML = records.length
+    ? records.map(item => `
+      <article class="record-card">
+        <div class="record-heading">
+          <strong>${number(item.litres)} litres</strong>
+          <strong>${money(item.amount)}</strong>
+        </div>
+        <p>${dateText(item.date)} · ${number(item.odometer)} km</p>
+        <p>${item.fullTank ? "Full tank" : "Partial refill"}</p>
+        ${item.notes ? `<p>${safe(item.notes)}</p>` : ""}
+        <button class="delete-btn"
+          data-delete="fuel"
+          data-id="${safe(item.id)}">Delete</button>
+      </article>
+    `).join("")
+    : "No fuel records yet.";
 }
 
 async function addFuel(event) {
   event.preventDefault();
 
+  const data = formData(event.target);
+
   const record = {
-    date: $("#fuel-date")?.value,
-    odometer: Number($("#fuel-odometer")?.value || 0),
-    liters: Number($("#fuel-liters")?.value || 0),
-    amount: Number($("#fuel-amount")?.value || 0),
-    fuelType: $("#fuel-type")?.value || "Petrol",
-    fullTank: $("#fuel-full-tank")?.checked || false
+    date: data.date,
+    odometer: Number(data.odometer),
+    litres: Number(data.litres),
+    amount: Number(data.amount),
+    fullTank: event.target.elements.fullTank.checked,
+    notes: data.notes || ""
   };
 
-  if (!record.date || record.liters <= 0 || record.amount <= 0) {
-    showMessage("Please enter valid fuel details");
+  if (record.litres <= 0 || record.amount <= 0) {
+    notify("Enter valid fuel details");
     return;
   }
 
   await saveFuel(record);
-
   event.target.reset();
-  showMessage("Fuel record saved");
+
+  notify("Fuel record saved");
   await renderFuel();
+  await renderDashboard();
 }
 
-async function removeFuel(id) {
-  if (!confirm("Delete this fuel record?")) return;
-
-  await deleteFuel(id);
-  showMessage("Fuel record deleted");
-  await renderFuel();
-}
-
-/* Expenses */
+/* EXPENSES */
 
 async function renderExpenses() {
-  const records = await getExpenseRecords();
-  const container = $("#expense-list");
-
-  if (!container) return;
+  const records = (await getExpenseRecords())
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const total = records.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0
+    (sum, item) => sum + Number(item.amount || 0), 0
   );
 
-  const totalElement = $("#total-expenses");
-  if (totalElement) {
-    totalElement.textContent = formatMoney(total);
-  }
+  $("expenseTotal").textContent = money(total);
+  $("expenseCount").textContent = `${records.length} records`;
 
-  const sorted = records.sort(
-    (a, b) => new Date(b.date) - new Date(a.date)
-  );
+  $("expenseList").classList.toggle("empty-state", !records.length);
 
-  container.innerHTML = sorted.length
-    ? sorted.map(item => `
-      <div class="card">
-        <div class="list-item">
-          <div class="list-icon">💳</div>
-          <div class="list-content">
-            <strong>${escapeHTML(item.category)}</strong>
-            <small>${formatDate(item.date)}</small>
-            ${item.notes ? `<small>${escapeHTML(item.notes)}</small>` : ""}
-          </div>
-          <div class="list-value">
-            ${formatMoney(item.amount)}
-            <br>
-            <button class="text-button"
-              onclick="removeExpense('${item.id}')">
-              Delete
-            </button>
-          </div>
+  $("expenseList").innerHTML = records.length
+    ? records.map(item => `
+      <article class="record-card">
+        <div class="record-heading">
+          <strong>${safe(item.title)}</strong>
+          <strong>${money(item.amount)}</strong>
         </div>
-      </div>
+        <p>${safe(item.category)} · ${dateText(item.date)}</p>
+        ${item.notes ? `<p>${safe(item.notes)}</p>` : ""}
+        <button class="delete-btn"
+          data-delete="expenses"
+          data-id="${safe(item.id)}">Delete</button>
+      </article>
     `).join("")
-    : `<div class="empty-state">
-        <div class="empty-icon">💳</div>
-        No expenses recorded
-      </div>`;
+    : "No expenses yet.";
 }
 
 async function addExpense(event) {
   event.preventDefault();
 
+  const data = formData(event.target);
+
   const record = {
-    category: $("#expense-category")?.value,
-    date: $("#expense-date")?.value,
-    amount: Number($("#expense-amount")?.value || 0),
-    notes: $("#expense-notes")?.value || ""
+    title: data.title,
+    date: data.date,
+    category: data.category,
+    amount: Number(data.amount),
+    notes: data.notes || ""
   };
 
-  if (!record.category || !record.date || record.amount <= 0) {
-    showMessage("Please enter valid expense details");
+  if (record.amount <= 0) {
+    notify("Enter a valid amount");
     return;
   }
 
   await saveExpense(record);
-
   event.target.reset();
-  showMessage("Expense saved");
+
+  notify("Expense saved");
   await renderExpenses();
+  await renderDashboard();
 }
 
-async function removeExpense(id) {
-  if (!confirm("Delete this expense?")) return;
-
-  await deleteExpense(id);
-  showMessage("Expense deleted");
-  await renderExpenses();
-}
-
-/* Reminders */
+/* REMINDERS */
 
 async function renderReminders() {
-  const records = await getReminders();
-  const container = $("#reminder-list");
+  const records = (await getReminders())
+    .sort((a, b) => {
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
 
-  if (!container) return;
+  $("reminderList").classList.toggle("empty-state", !records.length);
 
-  const sorted = records.sort(
-    (a, b) => new Date(a.date) - new Date(b.date)
-  );
-
-  container.innerHTML = sorted.length
-    ? sorted.map(item => {
-      const overdue = new Date(item.date) < new Date();
+  $("reminderList").innerHTML = records.length
+    ? records.map(item => {
+      const overdue = item.dueDate &&
+        item.dueDate < today() &&
+        !item.completed;
 
       return `
-        <div class="card">
-          <div class="list-item">
-            <div class="list-icon">🔔</div>
-            <div class="list-content">
-              <strong>${escapeHTML(item.title)}</strong>
-              <small>${formatDate(item.date)}</small>
-              <span class="badge ${overdue ? "danger" : "success"}">
-                ${overdue ? "Overdue" : "Upcoming"}
-              </span>
-            </div>
-            <button class="text-button"
-              onclick="removeReminder('${item.id}')">
-              Delete
-            </button>
+        <article class="record-card">
+          <div class="record-heading">
+            <strong>${safe(item.title)}</strong>
+            <span>${overdue ? "Overdue" : item.completed ? "Completed" : "Upcoming"}</span>
           </div>
-        </div>
+          ${item.dueDate ? `<p>Due: ${dateText(item.dueDate)}</p>` : ""}
+          ${item.dueOdometer ? `<p>Due at: ${number(item.dueOdometer)} km</p>` : ""}
+          ${item.notes ? `<p>${safe(item.notes)}</p>` : ""}
+          <button class="delete-btn"
+            data-delete="reminders"
+            data-id="${safe(item.id)}">Delete</button>
+        </article>
       `;
     }).join("")
-    : `<div class="empty-state">
-        <div class="empty-icon">🔔</div>
-        No reminders yet
-      </div>`;
+    : "No reminders yet.";
 }
 
 async function addReminder(event) {
   event.preventDefault();
 
-  const record = {
-    title: $("#reminder-title")?.value,
-    date: $("#reminder-date")?.value,
-    notes: $("#reminder-notes")?.value || ""
-  };
+  const data = formData(event.target);
 
-  if (!record.title || !record.date) {
-    showMessage("Please enter reminder title and date");
+  if (!data.dueDate && !data.dueOdometer) {
+    notify("Set a due date or odometer reading");
     return;
   }
 
-  await saveReminder(record);
+  await saveReminder({
+    title: data.title,
+    dueDate: data.dueDate || "",
+    dueOdometer: Number(data.dueOdometer || 0),
+    notes: data.notes || "",
+    completed: false
+  });
 
   event.target.reset();
-  showMessage("Reminder saved");
+
+  notify("Reminder saved");
   await renderReminders();
+  await renderDashboard();
 }
 
-async function removeReminder(id) {
-  if (!confirm("Delete this reminder?")) return;
+/* VEHICLE SETTINGS */
 
-  await deleteReminder(id);
-  showMessage("Reminder deleted");
-  await renderReminders();
+async function renderVehicle() {
+  const vehicle = await getVehicle() || DEFAULT_VEHICLE;
+  const form = $("vehicleForm");
+
+  for (const [key, value] of Object.entries(vehicle)) {
+    if (form.elements[key]) {
+      form.elements[key].value = value ?? "";
+    }
+  }
 }
 
-/* Backup and restore */
+async function saveVehicleForm(event) {
+  event.preventDefault();
 
-async function backupData() {
+  const data = formData(event.target);
+
+  await saveVehicle({
+    id: "my-vehicle",
+    make: data.make,
+    model: data.model,
+    year: Number(data.year),
+    odometer: Number(data.odometer),
+    registration: data.registration || "",
+    vin: data.vin || "",
+    notes: data.notes || ""
+  });
+
+  notify("Vehicle profile saved");
+  await renderDashboard();
+}
+
+/* BACKUP AND RESTORE */
+
+async function exportBackup() {
   try {
     const backup = await exportDatabase();
 
@@ -575,52 +480,100 @@ async function backupData() {
     const link = document.createElement("a");
 
     link.href = url;
-    link.download = `my-car-companion-backup-${new Date()
-      .toISOString().slice(0, 10)}.json`;
-
+    link.download = `my-car-companion-${today()}.json`;
     link.click();
 
     URL.revokeObjectURL(url);
-    showMessage("Backup downloaded");
+    $("backupStatus").textContent = "Backup exported successfully.";
   } catch (error) {
     console.error(error);
-    showMessage("Backup failed");
+    $("backupStatus").textContent = "Backup failed.";
   }
 }
 
-async function restoreData(event) {
-  const file = event.target.files?.[0];
+async function importBackup(event) {
+  const file = event.target.files[0];
   if (!file) return;
 
   try {
-    const text = await file.text();
-    const backup = JSON.parse(text);
+    const backup = JSON.parse(await file.text());
 
-    if (!confirm("Restore this backup into the app?")) return;
+    if (!backup.data) throw new Error("Invalid backup");
+
+    if (!confirm("Restore backup data?")) return;
 
     await importDatabase(backup);
 
-    showMessage("Backup restored");
-    await renderCurrentPage();
+    notify("Backup restored");
+    $("backupStatus").textContent = "Backup restored successfully.";
+
+    await renderPage("settings");
+    await renderDashboard();
   } catch (error) {
     console.error(error);
-    showMessage("Invalid backup file");
+    notify("Invalid backup file");
   }
 
   event.target.value = "";
 }
 
-/* Theme */
+/* DELETE RECORDS */
+
+async function deleteItem(store, id) {
+  if (!confirm("Delete this record?")) return;
+
+  const functions = {
+    maintenance: deleteMaintenance,
+    fuel: deleteFuel,
+    expenses: deleteExpense,
+    reminders: deleteReminder
+  };
+
+  await functions[store](id);
+
+  notify("Record deleted");
+  await renderPage(
+    store === "maintenance" ? "maintenance" : store
+  );
+  await renderDashboard();
+}
+
+async function clearAllData() {
+  if (!confirm("Permanently delete all app records?")) return;
+  if (!confirm("Are you sure? Export a backup first if needed.")) return;
+
+  const db = await openDatabase();
+
+  await new Promise((resolve, reject) => {
+    const transaction = db.transaction(
+      Object.values(STORES), "readwrite"
+    );
+
+    Object.values(STORES).forEach(name => {
+      transaction.objectStore(name).clear();
+    });
+
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+
+  await initializeVehicle();
+
+  notify("All records deleted");
+  await renderDashboard();
+  await renderVehicle();
+}
+
+/* THEME */
 
 function toggleTheme() {
   document.body.classList.toggle("light-theme");
 
-  const isLight = document.body.classList.contains("light-theme");
+  const theme = document.body.classList.contains("light-theme")
+    ? "light"
+    : "dark";
 
-  localStorage.setItem(
-    "myCarTheme",
-    isLight ? "light" : "dark"
-  );
+  localStorage.setItem("myCarTheme", theme);
 }
 
 function loadTheme() {
@@ -629,52 +582,68 @@ function loadTheme() {
   }
 }
 
-/* Vehicle profile */
+/* EVENT CONNECTIONS */
 
-async function initializeVehicle() {
-  const existing = await getVehicle();
-
-  if (!existing) {
-    await saveVehicle(DEFAULT_VEHICLE);
-  }
-}
-
-/* Connect forms and navigation */
-
-function connectApplication() {
+function connectEvents() {
   document.querySelectorAll(".nav-item").forEach(button => {
     button.addEventListener("click", () => {
-      navigateTo(button.dataset.page);
+      navigate(button.dataset.page);
     });
   });
 
-  $("#maintenance-form")?.addEventListener("submit", addMaintenance);
-  $("#fuel-form")?.addEventListener("submit", addFuel);
-  $("#expense-form")?.addEventListener("submit", addExpense);
-  $("#reminder-form")?.addEventListener("submit", addReminder);
+  document.querySelectorAll("[data-go]").forEach(button => {
+    button.addEventListener("click", () => {
+      navigate(button.dataset.go);
+    });
+  });
 
-  $("#backup-button")?.addEventListener("click", backupData);
-  $("#restore-file")?.addEventListener("change", restoreData);
-  $("#theme-button")?.addEventListener("click", toggleTheme);
+  $("maintenanceForm").addEventListener("submit", addMaintenance);
+  $("fuelForm").addEventListener("submit", addFuel);
+  $("expenseForm").addEventListener("submit", addExpense);
+  $("reminderForm").addEventListener("submit", addReminder);
+  $("vehicleForm").addEventListener("submit", saveVehicleForm);
+
+  $("themeToggle").addEventListener("click", toggleTheme);
+  $("exportBtn").addEventListener("click", exportBackup);
+
+  $("importBtn").addEventListener("click", () => {
+    $("importFile").click();
+  });
+
+  $("importFile").addEventListener("change", importBackup);
+  $("clearDataBtn").addEventListener("click", clearAllData);
+
+  document.addEventListener("click", event => {
+    const button = event.target.closest("[data-delete]");
+    if (!button) return;
+
+    deleteItem(button.dataset.delete, button.dataset.id);
+  });
 }
 
-/* Start application */
+/* APP START */
 
 async function startApp() {
   try {
     loadTheme();
-
     await openDatabase();
-    await initializeVehicle();
 
-    connectApplication();
+    if (!await getVehicle()) {
+      await saveVehicle(DEFAULT_VEHICLE);
+    }
 
-    await navigateTo("home");
+    connectEvents();
 
-    console.log("My Car Companion started successfully");
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+      if (!input.value) input.value = today();
+    });
+
+    await navigate("dashboard");
+
+    console.log("My Car Companion is ready");
   } catch (error) {
-    console.error("Application startup failed:", error);
-    showMessage("App startup failed. Check database.js");
+    console.error("Application startup error:", error);
+    notify("App could not start. Check database.js");
   }
 }
 
