@@ -5,12 +5,12 @@ import android.app.Activity
 import android.os.Bundle
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.OnBackPressedCallback
 import androidx.webkit.WebViewAssetLoader
 
 class MainActivity : Activity() {
 
     private lateinit var webView: WebView
+    private var backPressed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,34 +47,34 @@ class MainActivity : Activity() {
         webView.loadUrl(
             "https://appassets.androidplatform.net/assets/index.html"
         )
+    }
 
-        onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    webView.evaluateJavascript(
-                        """
-                        (function() {
-                            const active = document.querySelector('.page.active');
-                            if (active && active.id !== 'dashboard') {
-                                navigate('dashboard');
-                                return 'handled';
-                            }
-                            return 'exit';
-                        })();
-                        """
-                    ) { result ->
-                        if (result == "\"exit\"") {
-                            finish()
-                        }
-                    }
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() {
+        webView.evaluateJavascript(
+            """
+            (function() {
+                const active = document.querySelector('.page.active');
+
+                if (active && active.id !== 'dashboard') {
+                    navigate('dashboard');
+                    return 'handled';
                 }
+
+                return 'exit';
+            })();
+            """
+        ) { result ->
+            if (result == "\"exit\"") {
+                finish()
             }
-        )
+        }
     }
 
     override fun onDestroy() {
-        webView.destroy()
+        if (this::webView.isInitialized) {
+            webView.destroy()
+        }
         super.onDestroy()
     }
 }
