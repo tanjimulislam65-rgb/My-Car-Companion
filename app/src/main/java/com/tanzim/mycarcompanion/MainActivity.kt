@@ -50,17 +50,32 @@ class MainActivity : Activity() {
 
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        if (this::webView.isInitialized && webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
+        webView.evaluateJavascript(
+            """
+            (function() {
+                const active = document.querySelector('.page.active');
+                if (active && active.id !== 'dashboard') {
+                    if (typeof navigate === 'function') {
+                        navigate('dashboard');
+                    }
+                    return 'dashboard';
+                }
+                return 'exit';
+            })();
+            """
+        ) { result ->
+            if (result == "\"exit\"") {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    finish()
+                }
+            }
         }
     }
 
     override fun onDestroy() {
-        if (this::webView.isInitialized) {
-            webView.destroy()
-        }
+        webView.destroy()
         super.onDestroy()
     }
 }
