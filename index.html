@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101719">
+  <title>My Car Companion</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div><p class="eyebrow">PERSONAL VEHICLE MANAGER</p><h1>My Car Companion</h1></div>
+      <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">☼</button>
+    </header>
+
+    <main>
+      <section id="dashboard" class="page active">
+        <div class="vehicle-card">
+          <div class="vehicle-top"><span class="pill">MY VEHICLE</span><span class="status-dot">● Active</span></div>
+          <h2 id="vehicleTitle">Toyota Corolla Cross Hybrid</h2>
+          <p id="vehicleSubtitle">2021 · Hybrid</p>
+          <div class="vehicle-meta"><div><small>ODOMETER</small><strong id="dashOdometer">— km</strong></div><div><small>LAST FUEL ECONOMY</small><strong id="dashEconomy">— km/L</strong></div></div>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">AT A GLANCE</p><h2>Overview</h2></div><button class="text-btn" data-go="settings">Edit vehicle</button></div>
+        <div class="stat-grid">
+          <article class="stat-card"><span class="stat-icon">🔧</span><small>Maintenance</small><strong id="dashMaintenance">৳0</strong><span class="muted">Recorded total</span></article>
+          <article class="stat-card"><span class="stat-icon">⛽</span><small>Fuel expenses</small><strong id="dashFuel">৳0</strong><span class="muted">Recorded total</span></article>
+          <article class="stat-card"><span class="stat-icon">🧾</span><small>Other expenses</small><strong id="dashOther">৳0</strong><span class="muted">Recorded total</span></article>
+          <article class="stat-card"><span class="stat-icon">📅</span><small>Upcoming reminders</small><strong id="dashReminders">0</strong><span class="muted">Not completed</span></article>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">YOUR RECORDS</p><h2>Quick actions</h2></div></div>
+        <div class="quick-grid">
+          <button class="quick-action" data-go="maintenance"><span>🔧</span>Add service</button>
+          <button class="quick-action" data-go="fuel"><span>⛽</span>Log fuel</button>
+          <button class="quick-action" data-go="expenses"><span>৳</span>Add expense</button>
+          <button class="quick-action" data-go="reminders"><span>🔔</span>Set reminder</button>
+        </div>
+        <div class="section-heading"><div><p class="eyebrow">LATEST ACTIVITY</p><h2>Recent records</h2></div></div>
+        <div id="recentList" class="record-list empty-state">Your records will appear here.</div>
+      </section>
+
+      <section id="maintenance" class="page">
+        <div class="page-title"><p class="eyebrow">SERVICE HISTORY</p><h2>Maintenance</h2><p class="muted">Keep a complete record of work done on your car.</p></div>
+        <form id="maintenanceForm" class="form-card">
+          <h3>Add maintenance record</h3>
+          <div class="form-grid">
+            <label>Service / item<input name="title" required placeholder="e.g. Engine oil change"></label>
+            <label>Date<input name="date" type="date" required></label>
+            <label>Odometer (km)<input name="odometer" type="number" min="0" required placeholder="e.g. 15600"></label>
+            <label>Category<select name="category"><option>Engine oil</option><option>Filters</option><option>Brakes</option><option>Tyres</option><option>Battery</option><option>Hybrid system</option><option>General service</option><option>Other</option></select></label>
+            <label>Parts cost (৳)<input name="partsCost" type="number" min="0" step="0.01" value="0"></label>
+            <label>Labour cost (৳)<input name="labourCost" type="number" min="0" step="0.01" value="0"></label>
+            <label class="full">Workshop / notes<textarea name="notes" rows="2" placeholder="Workshop name, parts, observations..."></textarea></label>
+          </div>
+          <button class="primary-btn" type="submit">Save maintenance</button>
+        </form>
+        <div class="section-heading"><h3>Service history</h3><span id="maintenanceCount" class="count">0 records</span></div>
+        <div id="maintenanceList" class="record-list empty-state">No maintenance records yet.</div>
+      </section>
+
+      <section id="fuel" class="page">
+        <div class="page-title"><p class="eyebrow">FUEL LOGBOOK</p><h2>Fuel & mileage</h2><p class="muted">Log fill-ups to track fuel cost and economy.</p></div>
+        <div class="stat-grid two">
+          <article class="stat-card"><small>Latest calculated economy</small><strong id="fuelEconomy">— km/L</strong></article>
+          <article class="stat-card"><small>Total fuel cost</small><strong id="fuelTotal">৳0</strong></article>
+        </div>
+        <form id="fuelForm" class="form-card">
+          <h3>Record refuelling</h3>
+          <div class="form-grid">
+            <label>Date<input name="date" type="date" required></label>
+            <label>Odometer (km)<input name="odometer" type="number" min="0" required></label>
+            <label>Fuel (litres)<input name="litres" type="number" min="0.01" step="0.01" required></label>
+            <label>Total paid (৳)<input name="amount" type="number" min="0" step="0.01" required></label>
+            <label class="check-label"><input name="fullTank" type="checkbox"> Filled tank completely</label>
+            <label class="full">Fuel station / notes<textarea name="notes" rows="2"></textarea></label>
+          </div>
+          <p class="hint">For accurate full-to-full economy, mark consecutive fill-ups as full tank.</p>
+          <button class="primary-btn" type="submit">Save fuel log</button>
+        </form>
+        <div class="section-heading"><h3>Fuel history</h3><span id="fuelCount" class="count">0 records</span></div>
+        <div id="fuelList" class="record-list empty-state">No fuel records yet.</div>
+      </section>
+
+      <section id="expenses" class="page">
+        <div class="page-title"><p class="eyebrow">RUNNING COST</p><h2>Expenses</h2><p class="muted">Track the cost of owning and operating your vehicle.</p></div>
+        <div class="stat-card expense-total"><small>Total recorded expenses</small><strong id="expenseTotal">৳0</strong></div>
+        <form id="expenseForm" class="form-card">
+          <h3>Add expense</h3>
+          <div class="form-grid">
+            <label>Description<input name="title" required placeholder="e.g. Car wash"></label>
+            <label>Date<input name="date" type="date" required></label>
+            <label>Category<select name="category"><option>Fuel</option><option>Maintenance</option><option>Repair</option><option>Tyres</option><option>Washing</option><option>Parking</option><option>Toll</option><option>Insurance</option><option>Registration</option><option>Other</option></select></label>
+            <label>Amount (৳)<input name="amount" type="number" min="0.01" step="0.01" required></label>
+            <label class="full">Notes<textarea name="notes" rows="2"></textarea></label>
+          </div>
+          <button class="primary-btn" type="submit">Save expense</button>
+        </form>
+        <div class="section-heading"><h3>Expense history</h3><span id="expenseCount" class="count">0 records</span></div>
+        <div id="expenseList" class="record-list empty-state">No expenses yet.</div>
+      </section>
+
+      <section id="reminders" class="page">
+        <div class="page-title"><p class="eyebrow">NEVER MISS MAINTENANCE</p><h2>Reminders</h2><p class="muted">Create date-based or mileage-based reminders.</p></div>
+        <form id="reminderForm" class="form-card">
+          <h3>New reminder</h3>
+          <div class="form-grid">
+            <label>Reminder title<input name="title" required placeholder="e.g. Check brake pads"></label>
+            <label>Due date (optional)<input name="dueDate" type="date"></label>
+            <label>Due odometer (km)<input name="dueOdometer" type="number" min="0" placeholder="e.g. 20000"></label>
+            <label>Notes<input name="notes" placeholder="Optional"></label>
+          </div>
+          <p class="hint">Set at least a due date or an odometer reading. App reminders are stored locally; Android notification scheduling will be added in the native integration stage.</p>
+          <button class="primary-btn" type="submit">Save reminder</button>
+        </form>
+        <div id="reminderList" class="record-list empty-state">No reminders yet.</div>
+      </section>
+
+      <section id="settings" class="page">
+        <div class="page-title"><p class="eyebrow">PERSONALISE YOUR APP</p><h2>Vehicle & settings</h2><p class="muted">Your information stays on this device unless you export it.</p></div>
+        <form id="vehicleForm" class="form-card">
+          <h3>Vehicle profile</h3>
+          <div class="form-grid">
+            <label>Make<input name="make" value="Toyota" required></label>
+            <label>Model<input name="model" value="Corolla Cross Hybrid" required></label>
+            <label>Model year<input name="year" type="number" value="2021"></label>
+            <label>Current odometer (km)<input name="odometer" type="number" min="0" value="15600"></label>
+            <label>Registration number<input name="registration" placeholder="Optional"></label>
+            <label>Chassis / VIN<input name="vin" placeholder="Optional"></label>
+            <label class="full">Notes<textarea name="notes" rows="2" placeholder="Variant, engine code, purchase details..."></textarea></label>
+          </div>
+          <button class="primary-btn" type="submit">Save vehicle profile</button>
+        </form>
+        <div class="form-card">
+          <h3>Backup & restore</h3>
+          <p class="muted">Export a complete JSON backup or restore a backup previously created by this app. Keep backup files somewhere safe.</p>
+          <div class="button-row"><button id="exportBtn" class="primary-btn">Export backup</button><button id="importBtn" class="secondary-btn">Restore backup</button></div>
+          <input id="importFile" type="file" accept=".json,application/json" hidden>
+          <p id="backupStatus" class="hint" role="status"></p>
+        </div>
+        <div class="form-card danger-card">
+          <h3>Data management</h3>
+          <p class="muted">This permanently deletes all app records on this device. Export a backup first.</p>
+          <button id="clearDataBtn" class="danger-btn">Delete all records</button>
+        </div>
+        <p class="app-version">My Car Companion · Offline-first personal app · v0.1.0</p>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-page="dashboard"><span>⌂</span><small>Home</small></button>
+      <button class="nav-item" data-page="maintenance"><span>🔧</span><small>Service</small></button>
+      <button class="nav-item" data-page="fuel"><span>⛽</span><small>Fuel</small></button>
+      <button class="nav-item" data-page="expenses"><span>৳</span><small>Expenses</small></button>
+      <button class="nav-item" data-page="settings"><span>•••</span><small>More</small></button>
+    </nav>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="js/database.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
