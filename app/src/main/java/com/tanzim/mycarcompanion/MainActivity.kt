@@ -1,13 +1,13 @@
+
 package com.tanzim.mycarcompanion
 
+import android.app.Activity
 import android.os.Bundle
 import android.webkit.WebView
-import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatActivity
+import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
-import androidx.webkit.WebViewClientCompat
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
 
     private lateinit var webView: WebView
 
@@ -32,35 +32,35 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = false
         }
 
-        webView.webViewClient = object : WebViewClientCompat() {
+        webView.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView,
-                request: android.webkit.WebResourceRequest
+                url: String
             ): android.webkit.WebResourceResponse? {
-                return assetLoader.shouldInterceptRequest(request.url)
+                return assetLoader.shouldInterceptRequest(
+                    android.net.Uri.parse(url)
+                )
             }
         }
 
         webView.loadUrl(
             "https://appassets.androidplatform.net/assets/index.html"
         )
+    }
 
-        onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    if (webView.canGoBack()) {
-                        webView.goBack()
-                    } else {
-                        finish()
-                    }
-                }
-            }
-        )
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() {
+        if (this::webView.isInitialized && webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
     }
 
     override fun onDestroy() {
-        webView.destroy()
+        if (this::webView.isInitialized) {
+            webView.destroy()
+        }
         super.onDestroy()
     }
 }
