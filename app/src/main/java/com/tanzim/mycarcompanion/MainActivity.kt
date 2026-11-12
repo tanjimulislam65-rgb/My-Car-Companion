@@ -5,6 +5,7 @@ import android.app.Activity
 import android.os.Bundle
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.OnBackPressedCallback
 import androidx.webkit.WebViewAssetLoader
 
 class MainActivity : Activity() {
@@ -46,32 +47,30 @@ class MainActivity : Activity() {
         webView.loadUrl(
             "https://appassets.androidplatform.net/assets/index.html"
         )
-    }
 
-    @Suppress("DEPRECATION")
-    override fun onBackPressed() {
-        webView.evaluateJavascript(
-            """
-            (function() {
-                const active = document.querySelector('.page.active');
-                if (active && active.id !== 'dashboard') {
-                    if (typeof navigate === 'function') {
-                        navigate('dashboard');
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    webView.evaluateJavascript(
+                        """
+                        (function() {
+                            const active = document.querySelector('.page.active');
+                            if (active && active.id !== 'dashboard') {
+                                navigate('dashboard');
+                                return 'handled';
+                            }
+                            return 'exit';
+                        })();
+                        """
+                    ) { result ->
+                        if (result == "\"exit\"") {
+                            finish()
+                        }
                     }
-                    return 'dashboard';
-                }
-                return 'exit';
-            })();
-            """
-        ) { result ->
-            if (result == "\"exit\"") {
-                if (webView.canGoBack()) {
-                    webView.goBack()
-                } else {
-                    finish()
                 }
             }
-        }
+        )
     }
 
     override fun onDestroy() {
